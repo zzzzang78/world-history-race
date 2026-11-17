@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>세계사 타임 레이스</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1d2340;--card:#fffdf6;--pri:#ff5d73;--sec:#2ec4b6;--gold:#ffc83d;--blue:#3a86ff;--deep:#14183a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;font-family:'Jua','Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--ink);background:var(--deep);overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button{font-family:inherit;cursor:pointer;border:0}
+.screen{display:none;position:absolute;inset:0}
+.screen.on{display:flex}
+
+/* ---------- 타이틀 ---------- */
+#s-title{align-items:flex-start;justify-content:center;overflow:auto;padding:14px;
+  background:radial-gradient(circle at 20% 15%,#ff9a6b55,transparent 40%),radial-gradient(circle at 85% 80%,#2ec4b655,transparent 45%),linear-gradient(160deg,#2b2f77,#14183a)}
+.card{margin:auto 0;background:var(--card);border-radius:26px;padding:22px 24px;width:min(560px,100%);box-shadow:0 14px 0 #0003,0 30px 60px #0006;text-align:center}
+.card h1{margin:0;font-size:clamp(28px,6vw,40px);line-height:1.1;letter-spacing:-1px}
+.card h1 span{color:var(--pri)}
+.sub{margin:6px 0 14px;color:#5b6082;font-size:15px}
+.field{display:flex;gap:10px;align-items:center;justify-content:center;margin:8px 0}
+.field input{font:inherit;font-size:20px;padding:9px 14px;border-radius:14px;border:3px solid #d9d6ee;width:100%;text-align:center;background:#fff;color:var(--ink)}
+.field input:focus{outline:0;border-color:var(--blue)}
+.preview{height:120px;display:flex;align-items:flex-end;justify-content:center;margin:0 auto 4px;position:relative}
+.preview .pv{position:relative;font-size:70px;line-height:1;transform:scaleX(-1);filter:drop-shadow(0 6px 0 #0002)}
+.preview .hat{position:absolute;left:50%;top:-22px;font-size:38px;transform:translateX(-50%) scaleX(-1)}
+.preview .ring{position:absolute;bottom:-6px;left:50%;width:84px;height:14px;border-radius:50%;transform:translateX(-50%);opacity:.9}
+.pick{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
+.pick button{width:42px;height:42px;font-size:24px;border-radius:12px;background:#efeaff;border:3px solid transparent}
+.pick button.sel{border-color:var(--pri);background:#fff;transform:translateY(-2px)}
+.pick.col button{width:30px;height:30px;border-radius:50%}
+.lbl{font-size:13px;color:#7a7fa3;margin-top:6px}
+.btn{font-size:20px;padding:13px 18px;border-radius:16px;color:#fff;background:var(--pri);box-shadow:0 6px 0 #c73a52;width:100%;margin-top:10px;transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #c73a52}
+.btn.alt{background:var(--blue);box-shadow:0 6px 0 #2563c4}
+.btn.alt:active{box-shadow:0 2px 0 #2563c4}
+.btn.sm{font-size:15px;padding:8px 12px;width:auto;margin:0 4px}
+.how{font-size:13px;color:#6b7096;margin-top:12px;line-height:1.6}
+.how b{background:#efeaff;border-radius:6px;padding:1px 6px}
+.snd{position:absolute;top:10px;right:12px;font-size:26px;background:#fff3;color:#fff;border-radius:50%;width:44px;height:44px}
+
+/* ---------- 게임 ---------- */
+#s-game{flex-direction:column;background:#000}
+#stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+#cv{width:100%;max-height:100%;aspect-ratio:16/9;display:block;background:#222}
+.hud{position:absolute;left:10px;top:8px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.chip{background:#fffdf6ee;border-radius:14px;padding:4px 11px;font-size:clamp(13px,2.4vw,19px);box-shadow:0 3px 0 #0003}
+.chip.fire{background:#ffe0a8}
+#itemBtn{position:absolute;right:10px;top:8px;width:clamp(54px,9vw,76px);height:clamp(54px,9vw,76px);border-radius:18px;background:#fffdf6ee;font-size:clamp(28px,5vw,42px);box-shadow:0 4px 0 #0003;display:flex;align-items:center;justify-content:center;flex-direction:column;line-height:1}
+#itemBtn small{font-size:11px;color:#777;margin-top:2px}
+#itemBtn.has{animation:pulse .7s infinite alternate;background:#fff3b0}
+@keyframes pulse{to{transform:scale(1.1)}}
+#toast{position:absolute;left:50%;top:22%;transform:translateX(-50%);font-size:clamp(20px,4.5vw,38px);color:#fff;text-shadow:0 3px 0 #0008;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
+#toast.on{opacity:1}
+#count{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:min(30vw,260px);color:#fff;text-shadow:0 10px 0 #0006;pointer-events:none}
+#count.on{display:flex}
+.ctrl{display:none;height:clamp(84px,16vh,120px);background:#14183a;padding:8px 12px;gap:10px;align-items:stretch}
+@media (pointer:coarse){.ctrl{display:flex}}
+.ctrl button{flex:1;border-radius:20px;font-size:22px;color:#fff;box-shadow:0 6px 0 #0006}
+.ctrl button:active{transform:translateY(4px);box-shadow:0 2px 0 #0006}
+#bSlide{background:#2ec4b6}#bJump{background:#ff5d73;flex:1.4}
+#quit{position:absolute;left:10px;bottom:10px;background:#0006;color:#fff;border-radius:12px;padding:5px 10px;font-size:13px}
+
+#rot{display:none;position:fixed;inset:0;z-index:15;background:#14183af2;color:#fff;align-items:center;justify-content:center;text-align:center;font-size:26px;line-height:1.6}
+#rot button{margin-top:14px;font-size:16px;padding:8px 14px;border-radius:12px;background:#fff3;color:#fff}
+@media (orientation:portrait) and (max-width:700px){#s-game.on #rot:not(.off){display:flex}}
+/* 퀴즈 */
+#quiz{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0b0e2a99;padding:12px;z-index:20}
+#quiz.on{display:flex}
+.qcard{background:var(--card);border-radius:26px;width:min(720px,100%);padding:16px 18px 18px;box-shadow:0 10px 0 #0004;animation:pop .25s}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.qcard.gold{background:linear-gradient(#fff6d0,#fffdf6);box-shadow:0 0 0 5px var(--gold),0 10px 0 #0004}
+.qhead{display:flex;justify-content:space-between;align-items:center;font-size:15px;color:#6b7096}
+.qhead .tag{background:#efeaff;border-radius:10px;padding:2px 10px}
+.qhead .gtag{background:var(--gold);color:#5a3b00;border-radius:10px;padding:2px 10px;animation:pulse .5s infinite alternate}
+.qtext{font-size:clamp(19px,3.6vw,28px);line-height:1.35;margin:10px 0 12px;min-height:2.6em}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.opts{grid-template-columns:1fr}}
+.opt{background:#fff;border:3px solid #d9d6ee;border-radius:16px;padding:12px 10px;font-size:clamp(16px,2.8vw,22px);text-align:left;color:var(--ink);box-shadow:0 4px 0 #d9d6ee;display:flex;gap:8px;align-items:center}
+.opt i{font-style:normal;background:var(--blue);color:#fff;border-radius:50%;min-width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:15px}
+.opt:active{transform:translateY(3px);box-shadow:0 1px 0 #d9d6ee}
+.opt.ok{background:#c9f5d6;border-color:#2fbf6a;box-shadow:0 4px 0 #2fbf6a}
+.opt.no{background:#ffd3d9;border-color:#ff5d73;box-shadow:0 4px 0 #ff5d73}
+.tbar{height:12px;background:#e6e3f5;border-radius:8px;margin-top:12px;overflow:hidden}
+.tbar div{height:100%;background:linear-gradient(90deg,#2ec4b6,#ffc83d,#ff5d73);width:100%;transform-origin:left}
+.qfb{min-height:1.6em;margin-top:8px;font-size:clamp(14px,2.4vw,18px);color:#555}
+
+.joinMsg{min-height:1.3em;font-size:14px;color:#d6334d;margin-top:6px}
+.row2{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.btn.dk{background:#555b8a;box-shadow:0 4px 0 #3a3f66;font-size:14px;padding:8px 10px;flex:1;margin:0}
+#tWrap{flex:1;min-width:0;position:relative;display:flex}
+#tLobby{display:none;position:absolute;inset:0;background:#0f1330ee;align-items:center;justify-content:center;z-index:5}
+.lobbyCard{background:#fffdf6;color:var(--ink);border-radius:26px;padding:22px 30px;text-align:center;max-width:90%;max-height:92%;overflow:auto;box-shadow:0 12px 0 #0005}
+.lobbyCard .lc1{font-size:18px;color:#6b7096}
+.lobbyCard .codeBig{font-size:clamp(64px,12vw,120px);letter-spacing:10px;color:var(--pri);line-height:1.1}
+.lobbyCard .lc2{font-size:15px;color:#6b7096;margin:6px 0 10px}
+.lobbyCard .lc3{font-size:22px;margin:6px 0}
+.lobbyCard .names{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:720px}
+.lobbyCard .names span{background:#efeaff;border-radius:12px;padding:3px 10px;font-size:15px}
+.lobbyCard .rk{text-align:left;min-width:320px}
+.lobbyCard .rk div{display:flex;justify-content:space-between;gap:16px;padding:4px 2px;border-bottom:1px dashed #e4e1f2;font-size:17px}
+.lobbyCard button{margin-top:10px;font-size:16px;padding:8px 16px;border-radius:12px;background:var(--blue);color:#fff}
+/* ---------- 결과 ---------- */
+#s-result{align-items:center;justify-content:center;overflow:auto;padding:14px;background:linear-gradient(160deg,#2b2f77,#14183a)}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:8px 0 12px;height:150px}
+.podium div{width:96px;border-radius:14px 14px 0 0;text-align:center;padding-top:6px;font-size:13px;color:#fff;display:flex;flex-direction:column;align-items:center}
+.podium div b{font-size:34px;line-height:1.1}
+.p1{height:150px;background:linear-gradient(#ffc83d,#e6a100)}.p2{height:112px;background:linear-gradient(#cfd5e6,#9aa3bf)}.p3{height:84px;background:linear-gradient(#e0a370,#b8794a)}
+.mystat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.mystat div{background:#efeaff;border-radius:14px;padding:8px 4px;font-size:13px;color:#6b7096}
+.mystat b{display:block;font-size:24px;color:var(--ink)}
+.rank{max-height:200px;overflow:auto;text-align:left;font-size:15px;background:#fff;border-radius:14px;padding:6px 10px}
+.rank div{display:flex;justify-content:space-between;padding:3px 2px;border-bottom:1px dashed #e4e1f2}
+.rank .me{background:#fff3b0;border-radius:8px;font-weight:bold}
+
+/* ---------- 교사 화면 ---------- */
+#s-teacher{flex-direction:column;background:#0f1330;color:#fff}
+.tbarTop{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#1b2050}
+.tbarTop h2{margin:0;font-size:22px;flex:1}
+.tbarTop .big{font-size:26px;background:#0006;border-radius:12px;padding:2px 14px;min-width:96px;text-align:center}
+.tbarTop button{padding:8px 14px;border-radius:12px;font-size:16px;color:#fff;background:var(--pri)}
+.tbarTop button.g{background:var(--sec)}.tbarTop button.d{background:#555b8a}
+.tbody{flex:1;display:flex;min-height:0}
+#tc{flex:1;min-width:0;height:100%;object-fit:contain}
+.side{width:min(300px,32%);background:#1b2050;padding:10px;overflow:auto;font-size:15px}
+.side h3{margin:4px 0 6px;font-size:16px;color:var(--gold)}
+.top5 div{display:flex;gap:6px;align-items:center;padding:4px 6px;margin:3px 0;background:#0004;border-radius:10px}
+.top5 span:nth-child(2){flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#feed div{padding:3px 0;border-bottom:1px solid #fff2;font-size:14px;animation:pop .3s}
+</style>
+</head>
+<body>
+
+<!-- ================= 타이틀 ================= -->
+<section id="s-title" class="screen on">
+  <button class="snd" id="sndBtn" title="소리">🔊</button>
+  <div class="card">
+    <h1>세계사 <span>타임 레이스</span> ⏳</h1>
+    <p class="sub">선사 시대에서 현대까지 달리며 퀴즈를 풀자! 장애물도 넘어야 해요.</p>
+    <div class="preview"><div class="ring" id="pvRing"></div><div class="pv" id="pvEmoji">🐶</div><div class="hat" id="pvHat"></div></div>
+    <div class="field"><input id="nick" maxlength="8" placeholder="번호+이름 (예: 7김민지)" autocomplete="off"></div>
+    <div class="lbl">캐릭터</div><div class="pick" id="pkEmoji"></div>
+    <div class="lbl">모자</div><div class="pick" id="pkHat"></div>
+    <div class="lbl">색깔</div><div class="pick col" id="pkColor"></div>
+    <div class="field"><input id="code" maxlength="4" inputmode="numeric" placeholder="선생님이 알려준 방 코드 4자리"></div>
+    <button class="btn" id="goJoin">🚪 수업 방 입장 (친구들과 함께!)</button>
+    <div id="joinMsg" class="joinMsg"></div>
+    <button class="btn alt" id="goSolo">🏃 혼자 연습 (봇 27명과 대결)</button>
+    <div class="row2"><button class="btn sm dk" id="goTeacherNet">👩‍🏫 교사: 방 만들기</button><button class="btn sm dk" id="goTeacher">📺 교사 화면 데모</button></div>
+    <div class="how">
+      <b>Space / ↑</b> 점프 &nbsp; <b>↓</b> 슬라이드 &nbsp; <b>E</b> 아이템 &nbsp; <b>1~4</b> 퀴즈 답<br>
+      폰: 화면 아래 버튼 또는 위/아래로 쓸기 · 아래로 길게: 슬라이드
+    </div>
+  </div>
+</section>
+
+<!-- ================= 게임 ================= -->
+<section id="s-game" class="screen">
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div class="hud">
+      <div class="chip" id="hGate">🏁 1/9</div>
+      <div class="chip" id="hRank">🥇 -/-</div>
+      <div class="chip fire" id="hStreak" style="display:none">🔥 연속 0</div>
+    </div>
+    <button id="itemBtn"><span id="itemIcon">·</span><small>[E] 아이템</small></button>
+    <div id="toast"></div>
+    <div id="count"></div>
+    <button id="quit">그만하기</button>
+  </div>
+  <div id="rot"><div>📱↻<br>폰을 <b>가로로</b> 돌리면<br>훨씬 잘 보여요!<br><button id="rotOk">그냥 세로로 할래요</button></div></div>
+  <div class="ctrl"><button id="bSlide">⬇ 슬라이드</button><button id="bJump">⬆ 점프</button></div>
+</section>
+
+<!-- 퀴즈 -->
+<div id="quiz">
+  <div class="qcard" id="qcard">
+    <div class="qhead"><span class="tag" id="qtag">GATE 1</span><span class="gtag" id="qgold" style="display:none">✨ 골든 퀴즈 · 점수 2배!</span><span id="qtime">15</span></div>
+    <div class="qtext" id="qtext"></div>
+    <div class="opts" id="qopts"></div>
+    <div class="tbar"><div id="qbar"></div></div>
+    <div class="qfb" id="qfb"></div>
+  </div>
+</div>
+
+<!-- ================= 결과 ================= -->
+<section id="s-result" class="screen">
+  <div class="card" style="width:min(600px,100%)">
+    <h1 id="rTitle">결승선 통과!</h1>
+    <div class="sub" id="rSub"></div>
+    <div class="podium" id="podium"></div>
+    <div class="mystat" id="mystat"></div>
+    <div class="rank" id="rankList"></div>
+    <button class="btn" id="again">🔁 한 번 더 달리기</button>
+    <button class="btn alt" id="toTitle">처음 화면</button>
+  </div>
+</section>
+
+<!-- ================= 학생 대기실 ================= -->
+<section id="s-wait" class="screen" style="align-items:center;justify-content:center;padding:14px;background:linear-gradient(160deg,#2b2f77,#14183a)">
+  <div class="card">
+    <h1>⏳ 대기 중</h1>
+    <div class="sub">선생님이 시작 버튼을 누를 때까지 기다려요</div>
+    <div class="preview"><div class="ring" id="wRing"></div><div class="pv" id="wEmoji">🐶</div><div class="hat" id="wHat"></div></div>
+    <div class="mystat" style="grid-template-columns:1fr 1fr"><div><b id="wCode">----</b>방 코드</div><div><b id="wCnt">0</b>입장한 친구</div></div>
+    <div class="rank" id="wList" style="max-height:150px"></div>
+    <button class="btn alt" id="wLeave">나가기</button>
+  </div>
+</section>
+
+<!-- ================= 교사 화면 ================= -->
+<section id="s-teacher" class="screen">
+  <div class="tbarTop">
+    <h2>📺 세계사 타임 레이스 — 교사 화면 <small style="font-size:13px;opacity:.7">(미리보기: 봇 28명)</small></h2>
+    <div class="big" id="tTimer">0:00</div>
+    <button class="g" id="tStart">▶ 시작</button>
+    <button class="d" id="tReset">⏹ 초기화</button>
+    <button class="d" id="tBack">← 나가기</button>
+  </div>
+  <div class="tbody">
+    <div id="tWrap"><canvas id="tc" width="1100" height="760"></canvas><div id="tLobby"></div></div>
+    <div class="side">
+      <h3>🏆 실시간 TOP 5</h3><div class="top5" id="top5"></div>
+      <h3 style="margin-top:14px">📣 중계</h3><div id="feed"></div>
+    </div>
+  </div>
+</section>
+
+<script src="firebase-config.js"></script>
+<script src="questions.js"></script>
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ================== 설정 ================== */
+const CFG={gates:ERAS.length,spacing:270,tail:270,timeLimit:540};
+const FINISH=CFG.gates*CFG.spacing+CFG.tail;
+const gateDist=k=>CFG.spacing*k;
+const BASE=11,PPM=34,PX=240,CW=960,CH=540,GROUND=440;
+const JV=720,GRAV=2100;               // 점프 초기속도/중력(px)
+const EMOJIS=['🐶','🐱','🐰','🦊','🐼','🐯','🐸','🐵','🦄','🐧','🦖','🐙','🐻','🐨','🦁','🐮'];
+const HATS=['','🧢','🎩','👑','🎀','🎓','⛑️','🕶️'];
+const COLORS=['#ff5d73','#ff9a3d','#ffc83d','#2fbf6a','#2ec4b6','#3a86ff','#8e5bff','#ff6bd0'];
+const BOTNAMES=['번개토끼','질주곰','날쌘여우','돌격펭귄','빛의치타','로켓거북','바람돌이','고속판다','번쩍호랑','점프개구리','슬라이딩냥','불꽃사자','폭주코알라','날개말','회오리쥐','질풍냥이','우주비행견','트랙의왕','쌩쌩달팽이','번개소','치타킬러','광속닭','질주상어','태풍곰돌','초록번개','핑크윈드','골든런'];
+const ITEMS={banana:{icon:'🍌',name:'바나나'},rocket:{icon:'🚀',name:'로켓'},shield:{icon:'🛡️',name:'방패'}};
+
+/* ================== 문제 은행 ================== */
+const POOL={};
+RAW_Q.forEach((r,i)=>{(POOL[r[0]]=POOL[r[0]]||[]).push({id:i,era:r[0],q:r[1],a:r[2],w:r[3],exp:r[4]||''});});
+
+/* ================== 소리 ================== */
+let AC=null,muted=false;
+function sfx(type){
+  if(muted)return;
+  try{
+    AC=AC||new(window.AudioContext||window.webkitAudioContext)();
+    const seq={ok:[[660,.08],[880,.08],[1320,.16]],bad:[[220,.18],[150,.28]],jump:[[480,.05],[720,.07]],slide:[[300,.08]],hit:[[140,.16],[110,.16]],
+      item:[[900,.06],[1200,.06],[900,.06],[1500,.1]],tick:[[520,.09]],go:[[880,.35]],fin:[[523,.1],[659,.1],[784,.1],[1047,.35]],gate:[[400,.06],[600,.08]]}[type];
+    if(!seq)return;
+    let at=AC.currentTime;
+    for(const [f,d] of seq){
+      const o=AC.createOscillator(),g=AC.createGain();
+      o.type=(type==='bad'||type==='hit')?'sawtooth':'triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(.11,at);g.gain.exponentialRampToValueAtTime(.001,at+d);
+      o.connect(g);g.connect(AC.destination);o.start(at);o.stop(at+d);at+=d*.9;
+    }
+  }catch(e){}
+}
+
+/* ================== 월드 ================== */
+const S={profile:{name:'',emoji:'🐶',hat:'',color:COLORS[0]},mode:'solo',phase:'idle',cd:0,t:0,racers:[],order:[],me:null,
+  obst:[],feed:[],shake:0,pops:[],parts:[],used:new Set(),quizOpen:false,lastRankPop:0,paused:false};
+
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+function genObstacles(){
+  const rng=mulberry(20261117),arr=[];
+  for(let k=1;k<=CFG.gates+1;k++){
+    const a=(k===1?90:gateDist(k-1)+60),b=(k<=CFG.gates?gateDist(k)-60:FINISH-60);
+    let x=a;
+    while(x<b){arr.push({x,type:rng()<.55?'g':'a',era:Math.min(k,CFG.gates)});x+=30+rng()*22;}
+  }
+  return arr;
+}
+
+function newRacer(o){
+  return Object.assign({id:'',name:'',emoji:'🐶',hat:'',color:COLORS[0],dist:0,spd:0,state:'run',hurtT:0,hurtKind:'',getupT:0,
+    streak:0,best:0,boostT:0,boostPow:0,slowT:0,item:null,shield:0,gate:0,correct:0,golden:false,finishT:null,isBot:true,quizT:0,skill:.7,pace:1,
+    y:0,vy:0,slide:0,invuln:0,score:0,rank:1,itemT:0,tripTick:0,wrong:0,immune:0},o);
+}
+
+function buildRace(withMe,nBots){
+  S.racers=[];S.me=null;S.feed=[];S.pops=[];S.parts=[];S.t=0;S.shake=0;
+  S.obst=genObstacles();
+  if(withMe){
+    S.me=newRacer({id:'me',name:S.profile.name||'나',emoji:S.profile.emoji,hat:S.profile.hat,color:S.profile.color,isBot:false});
+    S.racers.push(S.me);
+  }
+  const names=BOTNAMES.slice().sort(()=>Math.random()-.5);
+  for(let i=0;i<nBots;i++){
+    S.racers.push(newRacer({id:'b'+i,name:names[i%names.length],emoji:pick(EMOJIS),hat:pick(HATS),color:pick(COLORS),
+      skill:clamp(rand(.4,.95),0,1),pace:rand(.94,1.06)}));
+  }
+  rankAll();
+}
+
+function rankAll(){
+  const a=S.racers.slice().sort((x,y)=>{
+    if(x.finishT!=null&&y.finishT!=null)return x.finishT-y.finishT;
+    if(x.finishT!=null)return-1;if(y.finishT!=null)return 1;
+    return y.dist-x.dist;
+  });
+  a.forEach((r,i)=>r.rank=i+1);S.order=a;
+}
+const rkFrac=r=>S.racers.length>1?(r.rank-1)/(S.racers.length-1):0;
+
+function feed(txt){S.feed.unshift(txt);if(S.feed.length>30)S.feed.pop();}
+
+/* ================== 규칙 ================== */
+function targetSpeed(r){
+  if(r.state==='quiz')return 0;
+  if(r.hurtT>0)return r.hurtKind==='trip'?BASE*.25:0;
+  if(r.getupT>0)return BASE*.55;
+  let v=BASE+Math.min(r.streak,5)*.6+(r.boostT>0?r.boostPow:0);
+  if(r.slowT>0)v*=.45;
+  return v*r.pace;
+}
+
+function stepRacer(r,dt){
+  if(r.finishT!=null){r.spd=Math.max(0,r.spd-20*dt);r.dist+=r.spd*dt;return;}
+  r.immune=Math.max(0,r.immune-dt);r.boostT=Math.max(0,r.boostT-dt);r.slowT=Math.max(0,r.slowT-dt);r.shield=Math.max(0,r.shield-dt);r.invuln=Math.max(0,r.invuln-dt);
+  let tgt;
+  if(r.state==='quiz'){tgt=0;}
+  else if(r.hurtT>0){r.hurtT-=dt;tgt=targetSpeed(r);if(r.hurtT<=0){r.hurtT=0;r.getupT=.5;}}
+  else if(r.getupT>0){r.getupT-=dt;tgt=targetSpeed(r);}
+  else tgt=targetSpeed(r);
+  r.spd+=clamp(tgt-r.spd,-80*dt,26*dt);
+  r.dist+=r.spd*dt;
+
+  if(!r.isBot)stepHuman(r,dt);else stepBot(r,dt);
+
+  // 게이트 도달
+  if(r.state!=='quiz'&&r.gate<CFG.gates&&r.dist>=gateDist(r.gate+1)){
+    r.dist=gateDist(r.gate+1);r.spd=0;r.state='quiz';r.hurtT=0;r.getupT=0;
+    if(r.isBot){r.quizT=rand(2.5,9)+(r.gate+1===CFG.gates?2:0);}
+    else openQuiz(r);
+  }
+  if(r.gate>=CFG.gates&&r.dist>=FINISH&&r.finishT==null){
+    r.finishT=S.t;r.dist=FINISH;
+    if(!r.isBot){sfx('fin');confetti();}
+  }
+}
+
+function stepHuman(r,dt){
+  // 점프/슬라이드 물리
+  if(r.y>0||r.vy>0){r.vy-=GRAV*dt;r.y+=r.vy*dt;if(r.y<=0){r.y=0;r.vy=0;}}
+  if(r.slide>0)r.slide-=dt;
+  // 장애물 충돌
+  if(r.state==='run'&&r.hurtT<=0&&r.getupT<=0&&r.invuln<=0){
+    for(const o of S.obst){
+      const dx=(o.x-r.dist)*PPM;
+      if(dx<-60)continue;if(dx>60)break;
+      if(Math.abs(dx)<30){
+        let hit=false;
+        if(o.type==='g')hit=r.y<46;
+        else{const span0=r.slide>0?0:r.y,span1=r.slide>0?26:r.y+62;hit=span1>34&&span0<160;}
+        if(hit){hurt(r,'trip');break;}
+      }
+    }
+  }
+}
+
+function hurt(r,kind){
+  r.hurtKind=kind;r.hurtT=kind==='trip'?.55:kind==='fall'?1.3:kind==='slip'?1.5:2.2;
+  r.boostT=0;r.invuln=1.2+r.hurtT;r.vy=0;r.y=0;r.slide=0;
+  if(!r.isBot){
+    S.shake=kind==='trip'?.25:.5;sfx(kind==='fall'?'bad':'hit');
+    S.pops.push({t:0,text:kind==='trip'?'아야!':kind==='fall'?'넘어졌다!':'미끄러졌다!',x:PX,y:GROUND-150,c:'#ffd0d0'});
+  }
+}
+
+function stepBot(r,dt){
+  if(r.state==='quiz'){
+    r.quizT-=dt;
+    if(r.quizT<=0)resolveQuiz(r,Math.random()<lerp(.35,.97,r.skill));
+    return;
+  }
+  // 장애물 걸림(추상 시뮬레이션): 약 35m마다 한 번 판정
+  r.tripTick+=r.spd*dt;
+  if(r.tripTick>=35){r.tripTick=0;if(r.hurtT<=0&&r.getupT<=0&&Math.random()<lerp(.28,.05,r.skill))hurt(r,'trip');}
+  // 아이템 사용
+  if(r.item){r.itemT-=dt;if(r.itemT<=0)useItem(r);}
+}
+
+function awardItem(r,ok,gold){
+  if(r.item||!ok)return;
+  const p=gold?1:r.streak>=3?1:r.streak===2?.6:.25;
+  if(Math.random()>p)return;
+  const rk=rkFrac(r);
+  const w={banana:45,shield:25,rocket:8+42*rk};
+  let tot=w.banana+w.shield+w.rocket,x=Math.random()*tot,it='banana';
+  for(const k in w){if((x-=w[k])<=0){it=k;break;}}
+  r.item=it;r.itemT=rand(2,7);
+  if(!r.isBot){sfx('item');S.pops.push({t:0,text:ITEMS[it].icon+' '+ITEMS[it].name+' 획득!',x:PX,y:GROUND-170,c:'#fff3b0'});}
+}
+
+function resolveQuiz(r,ok){
+  r.gate++;r.state='run';
+  const gold=(r.gate===CFG.gates);
+  if(ok){
+    r.streak++;r.best=Math.max(r.best,r.streak);r.correct++;
+    r.score+=gold?300:100;if(gold)r.golden=true;
+    const rk=rkFrac(r);
+    r.boostPow=3+2.5*rk+(gold?1.5:0);
+    r.boostT=2.5+.4*Math.min(r.streak,5)+(gold?1:0);
+    if(!r.isBot){
+      sfx('ok');
+      S.pops.push({t:0,text:r.streak>=2?`🔥 ${r.streak}연속! 부스터!`:'⚡ 부스터!',x:PX,y:GROUND-150,c:'#fff3b0'});
+      burst(PX,GROUND-60,'#ffc83d',16);
+    }
+    awardItem(r,true,gold);
+  }else{
+    r.streak=0;r.wrong++;hurt(r,'fall');
+  }
+}
+
+function useItem(r){
+  if(!r.item||r.state==='quiz'||r.finishT!=null)return;
+  const it=r.item;
+  if(it==='shield'){r.shield=12;r.item=null;if(!r.isBot){sfx('item');S.pops.push({t:0,text:'🛡️ 방패 ON (12초)',x:PX,y:GROUND-150,c:'#cfe8ff'});}return;}
+  const cand=S.racers.filter(x=>x!==r&&x.state!=='quiz'&&x.finishT==null&&x.immune<=0);
+  let tgt=null;
+  if(it==='banana'){
+    const ahead=cand.filter(x=>x.dist>r.dist).sort((a,b)=>a.dist-b.dist);
+    const behind=cand.filter(x=>x.dist<=r.dist).sort((a,b)=>b.dist-a.dist);
+    tgt=ahead[0]||behind[0];
+  }else{
+    const top=S.order.filter(x=>x!==r&&x.state!=='quiz'&&x.finishT==null&&x.immune<=0);
+    tgt=top[0];
+  }
+  if(!tgt){if(!r.isBot)toast('쓸 수 있는 상대가 없어요');return;}
+  r.item=null;
+  attack(r,tgt,it);
+}
+
+function attack(src,tgt,kind){
+  const ic=ITEMS[kind].icon;
+  if(tgt.remote){Net.sendAttack(src,tgt,kind);if(src===S.me){sfx('item');toast(`${ic} ${tgt.name}에게 발사!`);}return;}
+  if(!src.isBot){sfx('item');}
+  if(tgt.shield>0){
+    tgt.shield=0;feed(`🛡️ ${tgt.name}이(가) ${src.name}의 ${ic}을 막았다!`);
+    if(tgt===S.me)toast(`🛡️ ${src.name}의 ${ic} 방어 성공!`);
+    return;
+  }
+  hurt(tgt,kind==='banana'?'slip':'rocket');tgt.immune=tgt.hurtT+4;
+  tgt.streak=Math.max(0,tgt.streak-(kind==='rocket'?1:0));
+  feed(`${ic} ${src.name} → ${tgt.name}`);
+  if(tgt===S.me){toast(`${ic} ${src.name}의 공격!`);}
+  else if(src===S.me){toast(`${ic} ${tgt.name}에게 명중!`);}
+}
+
+/* ================== 퀴즈 UI ================== */
+let QZ=null;
+function pickQuestion(era){
+  const pool=POOL[era]||[];
+  let c=pool.filter(q=>!S.used.has(q.id));
+  if(!c.length){pool.forEach(q=>S.used.delete(q.id));c=pool;}
+  const q=pick(c);S.used.add(q.id);return q;
+}
+function openQuiz(r){
+  const era=r.gate+1,info=ERAS[era-1],gold=(era===CFG.gates);
+  const q=pickQuestion(era);
+  const opts=[{t:q.a,ok:true},...q.w.map(t=>({t,ok:false}))].sort(()=>Math.random()-.5);
+  QZ={q,opts,t:0,limit:gold?20:15,done:false,gold,r};
+  $('#qtag').textContent=`${info.icon} GATE ${era}/${CFG.gates} · ${info.name}`;
+  $('#qgold').style.display=gold?'':'none';
+  $('#qcard').classList.toggle('gold',gold);
+  $('#qtext').textContent=q.q;
+  $('#qfb').textContent='';
+  const box=$('#qopts');box.innerHTML='';
+  opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='opt';b.innerHTML=`<i>${i+1}</i><span></span>`;b.lastChild.textContent=o.t;
+    b.onclick=()=>answer(i);box.appendChild(b);
+  });
+  $('#quiz').classList.add('on');S.quizOpen=true;sfx('gate');
+}
+function answer(i){
+  if(!QZ||QZ.done)return;
+  QZ.done=true;
+  const ok=i>=0&&QZ.opts[i].ok;
+  const btns=[...$('#qopts').children];
+  btns.forEach((b,k)=>{if(QZ.opts[k].ok)b.classList.add('ok');else if(k===i)b.classList.add('no');});
+  $('#qfb').textContent=ok?'🎉 정답!':(i<0?'⏰ 시간 초과! ':'😵 아쉬워요. ')+(QZ.q.exp?QZ.q.exp:'');
+  const gold=QZ.gold,r=QZ.r,qz=QZ;
+  setTimeout(()=>{
+    if(QZ!==qz)return;
+    $('#quiz').classList.remove('on');S.quizOpen=false;
+    resolveQuiz(r,ok);QZ=null;
+  },ok?800:1900);
+}
+function quizTick(dt){
+  if(!QZ||QZ.done)return;
+  QZ.t+=dt;const left=Math.max(0,QZ.limit-QZ.t);
+  $('#qtime').textContent='⏱ '+Math.ceil(left);
+  $('#qbar').style.transform=`scaleX(${left/QZ.limit})`;
+  if(left<=0)answer(-1);
+}
+
+/* ================== 입력 ================== */
+function doJump(){const r=S.me;if(!r||S.phase!=='race'||r.state!=='run'||r.hurtT>0)return;if(r.y===0&&r.slide<=0){r.vy=JV;r.y=.01;sfx('jump');}}
+function doSlide(){const r=S.me;if(!r||S.phase!=='race'||r.state!=='run'||r.hurtT>0)return;
+  if(r.y>0){r.vy=-1000;return;}  // 공중이면 빨리 내려오기
+  if(r.slide<=0){r.slide=.7;sfx('slide');}}
+function doItem(){if(S.me&&S.phase==='race')useItem(S.me);}
+addEventListener('keydown',e=>{
+  if(S.quizOpen){const n=parseInt(e.key);if(n>=1&&n<=4)answer(n-1);return;}
+  if(e.code==='Space'||e.code==='ArrowUp'||e.key==='w'){e.preventDefault();doJump();}
+  else if(e.code==='ArrowDown'||e.key==='s'){e.preventDefault();doSlide();}
+  else if(e.key==='e'||e.key==='E'||e.key==='Enter'){doItem();}
+});
+const bJump=$('#bJump'),bSlide=$('#bSlide');
+bJump.addEventListener('touchstart',e=>{e.preventDefault();doJump();},{passive:false});
+bSlide.addEventListener('touchstart',e=>{e.preventDefault();doSlide();},{passive:false});
+bJump.onmousedown=doJump;bSlide.onmousedown=doSlide;
+$('#itemBtn').onclick=doItem;
+$('#rotOk').onclick=()=>$('#rot').classList.add('off');
+let tsY=null,tsT=0;
+const cv=$('#cv');
+cv.addEventListener('touchstart',e=>{tsY=e.touches[0].clientY;tsT=performance.now();},{passive:true});
+cv.addEventListener('touchend',e=>{if(tsY==null)return;const dy=e.changedTouches[0].clientY-tsY;
+  if(dy<-25)doJump();else if(dy>25)doSlide();else doJump();tsY=null;e.preventDefault();},{passive:false});
+cv.addEventListener('mousedown',()=>doJump());
+
+/* ================== 화면 전환/UI ================== */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');}
+function toast(t,ms=1100){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('on'),ms);}
+
+// 타이틀 꾸미기
+function buildPickers(){
+  const mk=(box,arr,key,render)=>{
+    const el=$(box);el.innerHTML='';
+    arr.forEach(v=>{const b=document.createElement('button');render(b,v);b.onclick=()=>{S.profile[key]=v;sync();};b.dataset.v=v;el.appendChild(b);});
+  };
+  mk('#pkEmoji',EMOJIS,'emoji',(b,v)=>b.textContent=v);
+  mk('#pkHat',HATS,'hat',(b,v)=>b.textContent=v||'∅');
+  mk('#pkColor',COLORS,'color',(b,v)=>b.style.background=v);
+}
+function sync(){
+  const p=S.profile;
+  $('#pvEmoji').textContent=p.emoji;$('#pvHat').textContent=p.hat;$('#pvRing').style.background=p.color;
+  [['#pkEmoji','emoji'],['#pkHat','hat'],['#pkColor','color']].forEach(([b,k])=>[...$(b).children].forEach(c=>c.classList.toggle('sel',c.dataset.v===p[k])));
+}
+$('#sndBtn').onclick=()=>{muted=!muted;$('#sndBtn').textContent=muted?'🔇':'🔊';};
+$('#nick').addEventListener('input',e=>S.profile.name=e.target.value.trim());
+
+/* ================== 파티클/팝업 ================== */
+function burst(x,y,c,n){for(let i=0;i<n;i++)S.parts.push({x,y,vx:rand(-240,240),vy:rand(-380,-60),t:0,life:rand(.5,1),c,s:rand(4,9)});}
+function confetti(){for(let i=0;i<70;i++)S.parts.push({x:rand(0,CW),y:rand(-40,0),vx:rand(-60,60),vy:rand(80,260),t:0,life:rand(1.5,3),c:pick(COLORS),s:rand(6,11),g:60});}
+
+/* ================== 그리기 ================== */
+const hex=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return `rgb(${A.map((v,i)=>Math.round(lerp(v,B[i],t))).join(',')})`;};
+const eraAt=m=>clamp(Math.floor(m/CFG.spacing)+1,1,CFG.gates);
+function eraBlend(m,key){ // 현재 시대와 다음 시대 사이를 부드럽게
+  const e=eraAt(m),f=(m%CFG.spacing)/CFG.spacing;
+  const A=ERAS[e-1],B=ERAS[Math.min(e,CFG.gates-1)];
+  const t=(m>=gateDist(CFG.gates)||f<.85)?0:(f-.85)/.15;
+  return {A,B,t};
+}
+
+function drawRunner(c,r,x,gy,sc,alpha,showName){
+  const t=performance.now()/1000;
+  c.save();c.globalAlpha=alpha;
+  const air=clamp(r.y/160,0,1);
+  c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(x,gy+6,26*sc*(1-air*.4),7*sc*(1-air*.4),0,0,7);c.fill();
+  c.fillStyle=r.color;c.globalAlpha=alpha*.9;c.beginPath();c.ellipse(x,gy+6,30*sc*(1-air*.4),8*sc*(1-air*.4),0,0,7);c.globalAlpha=alpha;c.fill();c.globalAlpha=alpha*.45;c.fillStyle='#000';c.beginPath();c.ellipse(x,gy+6,24*sc*(1-air*.4),6*sc*(1-air*.4),0,0,7);c.fill();c.globalAlpha=alpha;
+  const hurtNow=r.hurtT>0&&r.hurtKind!=='trip';
+  const sliding=!r.isBot&&r.slide>0;
+  const run=r.state==='run'&&r.spd>1&&!hurtNow;
+  const bob=run&&r.y===0?Math.sin(t*(10+r.spd*.6))*3*sc:0;
+  c.translate(x,gy-r.y-30*sc+bob);
+  if(r.boostT>0&&r.state!=='quiz'){c.font=`${34*sc}px serif`;c.textAlign='center';c.textBaseline='middle';c.fillText('🔥',-44*sc,10*sc+Math.sin(t*30)*3);}
+  c.save();
+  if(hurtNow){c.rotate(t*14);}
+  else if(r.hurtT>0){c.rotate(Math.sin(t*40)*.15);}
+  if(sliding){c.translate(0,14*sc);c.rotate(-1.15);}
+  c.scale(-1,1);
+  c.font=`${56*sc}px serif`;c.textAlign='center';c.textBaseline='middle';
+  c.fillText(r.emoji,0,0);
+  c.restore();
+  if(r.hat&&!sliding&&!hurtNow){c.font=`${30*sc}px serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(r.hat,0,-36*sc);}
+  if(hurtNow){c.font=`${26*sc}px serif`;c.fillText('💫',0,-44*sc);}
+  if(r.shield>0){c.strokeStyle='#7cc4ff';c.lineWidth=4*sc;c.globalAlpha=alpha*(.6+.3*Math.sin(t*10));c.beginPath();c.arc(0,0,44*sc,0,7);c.stroke();c.fillStyle='#7cc4ff33';c.fill();}
+  if(r.state==='quiz'){c.globalAlpha=alpha;c.font=`${26*sc}px serif`;c.fillText('💭',30*sc,-40*sc);}
+  c.restore();
+  if(showName){c.save();c.globalAlpha=Math.min(1,alpha+.2);c.font=`${12*Math.max(sc,.8)}px Jua, sans-serif`;c.textAlign='center';
+    const w=c.measureText(r.name).width+10;c.fillStyle='#000a';c.fillRect(x-w/2,gy-r.y-86*sc,w,16);c.fillStyle=r.color;c.fillRect(x-w/2,gy-r.y-86*sc,3,16);c.fillStyle='#fff';c.fillText(r.name,x+1,gy-r.y-74*sc);c.restore();}
+}
+
+function drawGame(){
+  const c=cv.getContext('2d'),me=S.me;
+  const dpr=Math.min(devicePixelRatio||1,2),w=cv.clientWidth;
+  if(cv.width!==Math.round(CW*dpr)){cv.width=Math.round(CW*dpr);cv.height=Math.round(CH*dpr);}
+  c.setTransform(dpr,0,0,dpr,0,0);
+  const D=me.dist,t=performance.now()/1000;
+  let sx=0,sy=0;if(S.shake>0){sx=rand(-1,1)*S.shake*18;sy=rand(-1,1)*S.shake*10;}
+  c.save();c.translate(sx,sy);
+  // 하늘
+  const {A,B,t:bt}=eraBlend(D,'sky');
+  const g=c.createLinearGradient(0,0,0,GROUND);g.addColorStop(0,mix(A.sky[0],B.sky[0],bt));g.addColorStop(1,mix(A.sky[1],B.sky[1],bt));
+  c.fillStyle=g;c.fillRect(-20,-20,CW+40,CH+40);
+  // 해
+  c.fillStyle=eraAt(D)===CFG.gates?'#ffe27a':'#fff7c2';c.beginPath();c.arc(780,110,eraAt(D)===CFG.gates?58:44,0,7);c.fill();
+  // 구름
+  c.font='64px serif';c.textBaseline='middle';c.globalAlpha=.8;
+  for(let i=0;i<7;i++){const x=((i*230-D*PPM*.08)%1500+1500)%1500-200;c.fillText('☁️',x,60+(i%3)*50);}c.globalAlpha=1;
+  // 먼 언덕
+  c.fillStyle=mix(A.ground,'#ffffff',.45);c.globalAlpha=.55;c.beginPath();c.moveTo(0,GROUND);
+  for(let x=0;x<=CW;x+=20){c.lineTo(x,GROUND-60-40*Math.sin((x+D*PPM*.15)/170)-25*Math.sin((x+D*PPM*.15)/63));}
+  c.lineTo(CW,GROUND);c.fill();c.globalAlpha=1;
+  // 풍경(시대별)
+  const SC=8,par=.55;
+  const i0=Math.floor((D-PX/(PPM*par)-4)/SC),i1=Math.ceil((D+(CW-PX)/(PPM*par)+4)/SC);
+  for(let i=i0;i<=i1;i++){
+    if(i<0||i%2)continue;
+    const m=i*SC,e=ERAS[eraAt(m)-1],x=PX+(m-D)*PPM*par;
+    c.font=`${54+((i*13)%5)*10}px serif`;c.textAlign='center';c.textBaseline='bottom';c.fillText(e.scn[Math.abs(i/2|0)%e.scn.length],x,GROUND-6);
+  }
+  // 바닥
+  c.fillStyle=mix(A.ground,B.ground,bt);c.fillRect(-20,GROUND,CW+40,CH-GROUND+20);
+  c.fillStyle='rgba(255,255,255,.28)';c.fillRect(-20,GROUND,CW+40,8);
+  c.fillStyle='rgba(0,0,0,.10)';
+  const off=(D*PPM)%120;
+  for(let x=-off;x<CW+120;x+=120){c.fillRect(x,GROUND+34,60,6);c.fillRect(x+30,GROUND+74,60,6);}
+  // 게이트/결승
+  for(let k=1;k<=CFG.gates;k++){
+    const x=PX+(gateDist(k)-D)*PPM;if(x<-260||x>CW+260)continue;
+    const gold=k===CFG.gates,done=me.gate>=k,info=ERAS[k-1];
+    c.fillStyle=done?'#9aa':gold?'#e6a100':'#fff';c.fillRect(x-5,GROUND-250,10,250+10);
+    const bx=x-5,by=GROUND-250;
+    c.fillStyle=done?'#8a93a8':gold?'#ffc83d':'#ff5d73';c.beginPath();c.roundRect(bx,by,230,64,12);c.fill();
+    c.fillStyle='#fff';c.font='22px Jua, sans-serif';c.textAlign='left';c.textBaseline='middle';
+    c.fillText(`${gold?'✨ 골든 ':''}GATE ${k}`,bx+12,by+20);
+    c.font='15px Jua, sans-serif';c.fillText(`${info.icon} ${info.name}`,bx+12,by+45);
+    if(done){c.font='34px serif';c.fillText('✅',bx+190,by+30);}
+  }
+  const fx=PX+(FINISH-D)*PPM;
+  if(fx>-100&&fx<CW+100){
+    for(let i=0;i<10;i++){c.fillStyle=i%2?'#fff':'#111';c.fillRect(fx,GROUND-200+i*20,16,20);c.fillStyle=i%2?'#111':'#fff';c.fillRect(fx+16,GROUND-200+i*20,16,20);}
+    c.fillStyle='#ff5d73';c.beginPath();c.roundRect(fx-60,GROUND-250,152,46,12);c.fill();c.fillStyle='#fff';c.font='26px Jua, sans-serif';c.textAlign='center';c.fillText('🏁 FINISH',fx+16,GROUND-226);
+  }
+  // 장애물 (크고 선명하게 + 안내 문구)
+  const lab=(txt,x,y,col)=>{c.font='22px Jua, sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=6;c.strokeStyle='#000b';c.strokeText(txt,x,y);c.fillStyle=col;c.fillText(txt,x,y);};
+  for(const o of S.obst){
+    const x=PX+(o.x-D)*PPM;if(x<-90||x>CW+90)continue;
+    const e=ERAS[o.era-1],ahead=o.x-D,near=ahead>-1&&ahead<22;
+    if(o.type==='g'){
+      c.fillStyle='rgba(0,0,0,.3)';c.beginPath();c.ellipse(x,GROUND+12,42,9,0,0,7);c.fill();
+      c.fillStyle='#ff8a1f';c.beginPath();c.roundRect(x-36,GROUND-40,72,54,14);c.fill();
+      c.lineWidth=5;c.strokeStyle='#fff';c.stroke();
+      c.font='46px serif';c.textAlign='center';c.textBaseline='middle';c.fillText(e.obs[0],x,GROUND-12);
+      if(near){lab('⬆ 점프!',x,GROUND-66,'#ffe27a');}
+    }else{
+      // 위에서 걸린 빨간 장애물: 아래로 슬라이드해서 통과 (점프로는 못 넘음)
+      c.fillStyle='rgba(255,50,70,.18)';c.fillRect(x-36,GROUND-176,72,150);
+      c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=3;c.setLineDash([8,8]);c.beginPath();c.moveTo(x-30,GROUND-176);c.lineTo(x-30,GROUND-70);c.moveTo(x+30,GROUND-176);c.lineTo(x+30,GROUND-70);c.stroke();c.setLineDash([]);
+      c.fillStyle='#e8334d';c.beginPath();c.roundRect(x-36,GROUND-100,72,76,14);c.fill();
+      c.lineWidth=5;c.strokeStyle='#fff';c.stroke();
+      c.font='46px serif';c.textAlign='center';c.textBaseline='middle';c.fillText(e.obs[1],x+Math.sin(t*6+o.x)*3,GROUND-62);
+      if(near){lab('⬇ 슬라이드!',x,GROUND-196,'#ff9aa8');}
+    }
+  }
+  // 다른 선수: 나와 가장 가까운 4명만 (화면 안에 있는 선수 중)
+  const others=S.racers.filter(r=>r!==me&&r.finishT==null&&Math.abs(PX+(r.dist-D)*PPM-PX)<CW).sort((a,b)=>Math.abs(a.dist-D)-Math.abs(b.dist-D)).slice(0,4);
+  others.sort((a,b)=>a.dist-b.dist);
+  others.forEach((r,i)=>{
+    const x=PX+(r.dist-D)*PPM;if(x<-60||x>CW+60)return;
+    drawRunner(c,r,x,GROUND+20+(i%3)*10,.66,.62,true);
+  });
+  drawRunner(c,me,PX,GROUND+14,1,1,false);
+  // 속도선
+  if(me.spd>13){c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=3;for(let i=0;i<8;i++){const y=GROUND-200+((i*61+t*900)%260),x=((i*173-t*1400)%CW+CW)%CW;c.beginPath();c.moveTo(x,y);c.lineTo(x+60+me.spd*2,y);c.stroke();}}
+  // 파티클
+  for(const p of S.parts){c.globalAlpha=clamp(1-p.t/p.life,0,1);c.fillStyle=p.c;c.fillRect(p.x,p.y,p.s,p.s);}c.globalAlpha=1;
+  // 팝업 텍스트
+  c.textAlign='center';c.textBaseline='middle';
+  for(const p of S.pops){c.globalAlpha=clamp(1-p.t/1.4,0,1);c.font='30px Jua, sans-serif';c.lineWidth=6;c.strokeStyle='#0008';c.strokeText(p.text,p.x,p.y-p.t*50);c.fillStyle=p.c;c.fillText(p.text,p.x,p.y-p.t*50);}c.globalAlpha=1;
+  c.restore();
+  // 미니맵(전체 순위)
+  const mx=300,mw=360,my=22;
+  c.fillStyle='#000a';c.beginPath();c.roundRect(mx-10,my-16,mw+20,36,14);c.fill();
+  c.fillStyle='#fff3';c.fillRect(mx,my,mw,4);
+  for(let k=1;k<=CFG.gates;k++){c.fillStyle=k===CFG.gates?'#ffc83d':'#fff8';c.fillRect(mx+mw*gateDist(k)/FINISH-1,my-5,2,14);}
+  c.font='13px serif';c.textBaseline='middle';c.textAlign='center';
+  for(const r of S.racers){if(r===me)continue;c.globalAlpha=.7;c.fillText(r.emoji,mx+mw*clamp(r.dist/FINISH,0,1),my+2);}
+  c.globalAlpha=1;c.font='22px serif';c.fillText(me.emoji,mx+mw*clamp(me.dist/FINISH,0,1),my+2);
+  c.fillStyle=S.profile.color;c.fillRect(mx+mw*clamp(me.dist/FINISH,0,1)-8,my+14,16,3);
+}
+
+/* ================== 교사 화면 그리기 ================== */
+function drawTeacher(){
+  const tc=$('#tc'),c=tc.getContext('2d'),W=tc.width,H=tc.height;
+  const cx=W/2,cy=H/2+6,R=225,LS=420,TW=124,per=2*LS+2*Math.PI*R;
+  // 경기장 위 위치 (p:0~1 한 바퀴, o:바깥쪽 오프셋)
+  const at=(p,o)=>{
+    let d=((p%1)+1)%1*per,h=LS/2,arc=Math.PI*R;
+    if(d<h)return{x:cx+d,y:cy+R+o,nx:0,ny:1};
+    d-=h;if(d<arc){const th=Math.PI/2-d/R;return{x:cx+h+(R+o)*Math.cos(th),y:cy+(R+o)*Math.sin(th),nx:Math.cos(th),ny:Math.sin(th)};}
+    d-=arc;if(d<LS)return{x:cx+h-d,y:cy-R-o,nx:0,ny:-1};
+    d-=LS;if(d<arc){const th=-Math.PI/2-d/R;return{x:cx-h+(R+o)*Math.cos(th),y:cy+(R+o)*Math.sin(th),nx:Math.cos(th),ny:Math.sin(th)};}
+    d-=arc;return{x:cx-h+d,y:cy+R+o,nx:0,ny:1};
+  };
+  const lap=(r)=>{c.beginPath();c.moveTo(cx-LS/2,cy+R+r);c.lineTo(cx+LS/2,cy+R+r);c.arc(cx+LS/2,cy,R+r,Math.PI/2,-Math.PI/2,true);c.lineTo(cx-LS/2,cy-R-r);c.arc(cx-LS/2,cy,R+r,-Math.PI/2,Math.PI/2,true);c.closePath();};
+  // 바깥 잔디 + 관중석 띠
+  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#1b2a63');bg.addColorStop(1,'#0f1330');c.fillStyle=bg;c.fillRect(0,0,W,H);
+  lap(TW/2+34);c.fillStyle='#2a3a82';c.fill();
+  lap(TW/2+14);c.fillStyle='#34a853';c.fill();
+  // 트랙
+  lap(0);c.lineWidth=TW;c.strokeStyle='#c4623f';c.stroke();
+  c.lineWidth=3;c.strokeStyle='#ffffffaa';lap(TW/2);c.stroke();lap(-TW/2);c.stroke();
+  c.lineWidth=2;c.setLineDash([10,12]);c.strokeStyle='#ffffff55';
+  for(const o of[-TW/6,TW/6]){lap(o);c.stroke();}c.setLineDash([]);
+  // 안쪽 잔디
+  lap(-TW/2-3);c.fillStyle='#2f9e4d';c.fill();
+  // 게이트 표시
+  c.textAlign='center';c.textBaseline='middle';
+  for(let k=1;k<=CFG.gates;k++){
+    const p=gateDist(k)/FINISH,a=at(p,-TW/2),b=at(p,TW/2),gold=k===CFG.gates;
+    c.strokeStyle=gold?'#ffc83d':'#ffffffcc';c.lineWidth=gold?5:3;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+    const q=at(p,TW/2+36);c.font='26px serif';c.fillStyle='#fff';c.fillText(ERAS[k-1].icon,q.x,q.y-6);
+    c.font='11px Jua, sans-serif';c.fillStyle='#e8ebff';c.fillText(ERAS[k-1].short,q.x,q.y+14);
+  }
+  // 출발/결승선
+  const f0=at(0,-TW/2),f1=at(0,TW/2);
+  for(let i=0;i<10;i++){const u=i/10,v=(i+1)/10;c.strokeStyle=i%2?'#fff':'#111';c.lineWidth=10;c.beginPath();c.moveTo(f0.x+(f1.x-f0.x)*u,f0.y+(f1.y-f0.y)*u);c.lineTo(f0.x+(f1.x-f0.x)*v,f0.y+(f1.y-f0.y)*v);c.stroke();}
+  c.font='20px Jua, sans-serif';c.fillStyle='#fff';c.fillText('🏁 출발 · 결승',cx,cy+R+TW/2+30);
+  // 선수 (완주자는 안쪽 전광판으로)
+  const act=S.racers.filter(r=>r.finishT==null);
+  const topIds=new Set(S.order.slice(0,3));
+  const sorted=act.slice().sort((a,b)=>a.dist-b.dist); // 앞선 선수가 위에 그려짐
+  sorted.forEach(r=>{
+    const i=S.racers.indexOf(r),lane=(((i*3)%7)-3)*(TW-30)/6;
+    const q=at(clamp(r.dist/FINISH,0,.999),lane);
+    c.globalAlpha=r.on===false?.35:1;
+    c.fillStyle='#0006';c.beginPath();c.ellipse(q.x,q.y+12,11,4,0,0,7);c.fill();
+    c.fillStyle=r.color;c.beginPath();c.arc(q.x,q.y,13,0,7);c.fill();
+    c.font='20px serif';c.fillStyle='#fff';c.fillText(r.emoji,q.x,q.y+1);
+    let tag='';if(r.state==='quiz')tag='💭';else if(r.hurtT>0)tag='😵';else if(r.boostT>0)tag='🔥';else if(r.shield>0)tag='🛡️';
+    if(r.item)tag+=ITEMS[r.item].icon;
+    if(tag){c.font='13px serif';c.fillText(tag,q.x,q.y-20);}
+    if(topIds.has(r)){c.font='13px Jua, sans-serif';c.lineWidth=4;c.strokeStyle='#000c';c.strokeText(r.name,q.x,q.y+25);c.fillStyle='#ffe27a';c.fillText(r.name,q.x,q.y+25);}
+    c.globalAlpha=1;
+  });
+  // 안쪽 전광판: 선두 + 완주 기록
+  const ix=cx-LS/2-60,iw=LS+120,iy=cy-R+TW/2+34;
+  c.fillStyle='#0f1330cc';c.beginPath();c.roundRect(ix,iy,iw,2*R-TW-68,18);c.fill();
+  c.textAlign='center';c.font='22px Jua, sans-serif';c.fillStyle='#ffc83d';c.fillText('🏟️ 세계사 타임 레이스',cx,iy+30);
+  const lead=S.order[0];
+  if(lead){c.font='16px Jua, sans-serif';c.fillStyle='#fff';c.fillText(`선두  ${lead.emoji} ${lead.name}  (${Math.round(lead.dist)}m / ${FINISH}m)`,cx,iy+60);}
+  const fin=S.racers.filter(r=>r.finishT!=null).sort((a,b)=>a.finishT-b.finishT).slice(0,10);
+  c.font='14px Jua, sans-serif';c.textAlign='left';
+  if(!fin.length){c.fillStyle='#aab';c.textAlign='center';c.fillText('결승선을 통과하면 여기에 기록돼요',cx,iy+100);}
+  fin.forEach((r,i)=>{const col=i<5?0:1,row=i%5,x=ix+34+col*(iw/2-6),y=iy+92+row*24;c.fillStyle='#7cffb0';c.fillText(`${i+1}등 ${r.emoji} ${r.name}`,x,y);c.fillStyle='#fff';c.textAlign='right';c.fillText(fmt(r.finishT),x+iw/2-70,y);c.textAlign='left';});
+  c.textAlign='center';
+}
+const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+let lastSide=0;
+function drawSide(){
+  const t5=S.order.slice(0,5).map((r,i)=>`<div><span>${['🥇','🥈','🥉','4','5'][i]}</span><span>${r.emoji} ${r.name}</span><span>${r.finishT!=null?fmt(r.finishT):'🔥'+r.streak}</span></div>`).join('');
+  $('#top5').innerHTML=t5;
+  $('#feed').innerHTML=S.feed.slice(0,10).map(f=>`<div></div>`).join('');
+  [...$('#feed').children].forEach((d,i)=>d.textContent=S.feed[i]);
+  $('#tTimer').textContent=S.phase==='count'?'READY':fmt(S.t);
+}
+
+/* ================== 네트워크(Firebase Realtime Database) ================== */
+/*  rooms/{방코드}/
+      meta    : {state:'lobby'|'race'|'end', round, startAt(서버시각 ms)}
+      players : {이름: {name,emoji,hat,color,on,joinedAt}}
+      pos     : {이름: {d,s,g,c,sc,k,b,w,st,it,f,ts}}   (학생이 0.4초마다 기록)
+      inbox   : {이름: {푸시키: {k:아이템,f:보낸사람}}}   (아이템 공격)
+      feed    : {푸시키: {t:'중계 문구'}}                  (교사 화면 중계)            */
+const Net={on:false,role:'',code:'',pid:'',db:null,off:0,meta:{},players:{},pos:{},remote:{},lastSend:0,lastRes:0,lastUi:0,round:0,joined:false,resume:null,_ending:false,hideRes:false};
+const loadScript=u=>new Promise((res,rej)=>{const e=document.createElement('script');e.src=u;e.onload=res;e.onerror=()=>rej(new Error('load'));document.head.appendChild(e);});
+Net.now=()=>Date.now()+Net.off;
+Net.ref=function(p){return this.db.ref('rooms/'+this.code+(p?'/'+p:''));};
+Net.init=async function(){
+  if(this.db)return;
+  if(!window.firebase){
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js');
+  }
+  const cfg=window.FIREBASE_CONFIG;
+  if(!cfg||!cfg.databaseURL||/YOUR/i.test(cfg.databaseURL))throw new Error('config');
+  if(!firebase.apps.length)firebase.initializeApp(cfg);
+  this.db=firebase.database();
+  this.db.ref('.info/serverTimeOffset').on('value',s=>{this.off=s.val()||0;});
+};
+Net.createRoom=async function(){
+  await this.init();this.role='teacher';this.code='';
+  for(let i=0;i<12&&!this.code;i++){
+    const c=String(Math.floor(1000+Math.random()*9000));
+    const snap=await this.db.ref('rooms/'+c+'/meta').once('value');
+    if(!snap.exists())this.code=c;
+  }
+  if(!this.code)throw new Error('code');
+  await this.ref('meta').set({state:'lobby',round:1,createdAt:firebase.database.ServerValue.TIMESTAMP});
+  this.on=true;this.round=0;this._ending=false;this.hideRes=false;
+  this.subscribe();
+};
+Net.join=async function(code,name,prof){
+  await this.init();this.role='student';this.code=code;
+  const m=(await this.ref('meta').once('value')).val();
+  if(!m||!m.state){this.code='';throw new Error('noroom');}
+  const pid=name.replace(/[.$#\[\]\/]/g,'_').slice(0,12);
+  const old=(await this.ref('players/'+pid).once('value')).val();
+  if(old&&old.on)throw new Error('dup');
+  if(!old&&(m.state==='race'||m.state==='end'))throw new Error('started');
+  this.pid=pid;
+  const pr=this.ref('players/'+pid);
+  await pr.set({name:pid,emoji:prof.emoji,hat:prof.hat||'',color:prof.color,on:true,joinedAt:old&&old.joinedAt?old.joinedAt:firebase.database.ServerValue.TIMESTAMP});
+  pr.child('on').onDisconnect().set(false);
+  this.resume=null;
+  if(m.state==='race'){const q=(await this.ref('pos/'+pid).once('value')).val();if(q)this.resume=q;}
+  this.on=true;this.joined=true;this.round=0;
+  this._conn=this.db.ref('.info/connected');
+  this._conn.on('value',sn=>{if(sn.val()&&this.joined){pr.child('on').onDisconnect().set(false);pr.child('on').set(true);}});
+  this.subscribe();
+};
+Net.subscribe=function(){
+  const R=p=>this.ref(p);
+  R('meta').on('value',s=>{this.meta=s.val()||{};if(!this.meta.state&&this.role==='student'&&this.joined)kicked();});
+  R('players').on('value',s=>{this.players=s.val()||{};this.syncRemote();});
+  R('pos').on('value',s=>{this.pos=s.val()||{};this.syncRemote();});
+  if(this.role==='teacher')R('feed').limitToLast(12).on('child_added',s=>{const v=s.val();if(v&&v.t)feed(v.t);});
+  else R('inbox/'+this.pid).on('child_added',s=>{const v=s.val();s.ref.remove();if(v)receiveAttack(v);});
+};
+Net.syncRemote=function(){
+  const order=Object.keys(this.players).sort((a,b)=>(this.players[a].joinedAt||0)-(this.players[b].joinedAt||0));
+  const seen={};
+  order.forEach(id=>{
+    if(this.role==='student'&&id===this.pid)return;
+    const p=this.players[id],q=this.pos[id]||{};
+    let r=this.remote[id];
+    if(!r)r=this.remote[id]=newRacer({id,remote:true,isBot:false});
+    r.name=p.name||id;r.emoji=p.emoji||'🐶';r.hat=p.hat||'';r.color=p.color||COLORS[0];r.on=p.on!==false;
+    if(q.d!=null){
+      r.tgtD=q.d;r.tgtS=q.s||0;r.ts=q.ts||this.now();r.gate=q.g||0;r.correct=q.c||0;r.score=q.sc||0;r.streak=q.k||0;r.best=q.b||0;r.wrong=q.w||0;
+      const st=q.st||0;
+      r.state=st&1?'quiz':'run';r.hurtT=st&2?1:0;r.hurtKind='slip';r.boostT=st&4?1:0;r.shield=st&8?1:0;r.immune=st&16?1:0;
+      r.item=[null,'banana','rocket','shield'][q.it||0];
+      r.finishT=q.f>0?q.f:null;
+      if(!r.dist&&r.tgtD>0)r.dist=r.tgtD;
+    }else{r.tgtD=0;r.tgtS=0;r.dist=0;r.finishT=null;r.state='run';r.hurtT=0;r.boostT=0;r.shield=0;r.item=null;}
+    seen[id]=1;
+  });
+  for(const id in this.remote)if(!seen[id])delete this.remote[id];
+  S.racers=(S.me?[S.me]:[]).concat(order.filter(id=>this.remote[id]).map(id=>this.remote[id]));
+};
+Net.sendPos=function(){
+  const r=S.me;if(!r||!this.joined)return;
+  const st=(r.state==='quiz'?1:0)|(r.hurtT>0?2:0)|(r.boostT>0?4:0)|(r.shield>0?8:0)|(r.immune>0?16:0);
+  const it={banana:1,rocket:2,shield:3}[r.item]||0;
+  this.ref('pos/'+this.pid).set({d:+r.dist.toFixed(1),s:+r.spd.toFixed(1),g:r.gate,c:r.correct,sc:r.score,k:r.streak,b:r.best,w:r.wrong,st,it,f:r.finishT!=null?+r.finishT.toFixed(2):0,ts:this.now()});
+};
+Net.sendAttack=function(src,tgt,kind){
+  const k=this.ref('inbox/'+tgt.id).push().key,up={};
+  up['inbox/'+tgt.id+'/'+k]={k:kind,f:src.name};
+  up['feed/'+k]={t:`${ITEMS[kind].icon} ${src.name} → ${tgt.name}`};
+  this.ref('').update(up);
+};
+Net.sendFeed=function(t){this.ref('feed').push({t});};
+Net.startRace=function(){this._ending=false;return this.ref('meta').update({state:'race',startAt:this.now()+4500});};
+Net.setEnd=function(){return this.ref('meta').update({state:'end'});};
+Net.newRound=async function(){
+  await Promise.all([this.ref('pos').remove(),this.ref('feed').remove(),this.ref('inbox').remove()]);
+  await this.ref('meta').update({state:'lobby',round:(this.meta.round||1)+1,startAt:null});
+  this._ending=false;this.hideRes=false;S.feed=[];
+};
+Net.leave=async function(del){
+  const was=this.role,code=this.code,pid=this.pid;
+  this.joined=false;this.on=false;
+  try{
+    if(this.db&&code){
+      ['meta','players','pos','feed'].forEach(p=>this.db.ref('rooms/'+code+'/'+p).off());
+      if(was==='student'){this.db.ref('rooms/'+code+'/inbox/'+pid).off();if(this._conn)this._conn.off();await this.db.ref('rooms/'+code+'/players/'+pid+'/on').set(false);}
+      else if(del)await this.db.ref('rooms/'+code).remove();
+    }
+  }catch(e){}
+  this.meta={};this.players={};this.pos={};this.remote={};this.code='';this.role='';this.round=0;
+  S.racers=[];S.me=null;S.phase='idle';S.order=[];
+};
+
+function receiveAttack(v){
+  const me=S.me;if(!me||me.finishT!=null||me.state==='quiz'||me.immune>0||S.phase!=='race')return;
+  const ic=ITEMS[v.k]?ITEMS[v.k].icon:'💥';
+  if(me.shield>0){me.shield=0;toast(`🛡️ ${v.f}의 ${ic} 방어 성공!`);Net.sendFeed(`🛡️ ${me.name}이(가) ${v.f}의 ${ic}을 막았다!`);return;}
+  hurt(me,v.k==='banana'?'slip':'rocket');me.immune=me.hurtT+4;me.streak=Math.max(0,me.streak-(v.k==='rocket'?1:0));
+  toast(`${ic} ${v.f}의 공격!`);
+}
+function kicked(){toast('방이 닫혔어요');Net.leave();view='none';show('#s-title');}
+
+/* ================== 메인 루프 ================== */
+let last=performance.now(),raf=0,view='none';
+
+function netRemote(dt){
+  const ns=Net.now();
+  for(const id in Net.remote){
+    const r=Net.remote[id];
+    if(r.finishT!=null){r.dist=FINISH;r.spd=0;continue;}
+    const tg=(r.tgtD||0)+(r.tgtS||0)*clamp((ns-(r.ts||ns))/1000,0,1.2);
+    r.dist+=(tg-r.dist)*Math.min(1,dt*10);r.spd=r.tgtS||0;
+  }
+  rankAll();
+}
+
+function goWait(){
+  S.me=null;view='wait';S.phase='idle';QZ=null;S.quizOpen=false;$('#quiz').classList.remove('on');
+  const p=S.profile;$('#wEmoji').textContent=p.emoji;$('#wHat').textContent=p.hat;$('#wRing').style.background=p.color;$('#wCode').textContent=Net.code;
+  show('#s-wait');
+  Net.syncRemote();
+}
+function startNetRace(resume){
+  S.obst=genObstacles();S.t=0;S.feed=[];S.pops=[];S.parts=[];S.shake=0;Net._ending=false;
+  const p=S.profile;
+  S.me=newRacer({id:Net.pid,name:Net.pid,emoji:p.emoji,hat:p.hat,color:p.color,isBot:false});
+  if(resume)Object.assign(S.me,{dist:resume.d||0,gate:resume.g||0,correct:resume.c||0,score:resume.sc||0,streak:resume.k||0,best:resume.b||0,wrong:resume.w||0});
+  Net.syncRemote();
+  S.phase='count';
+  view='game';show('#s-game');$('#count').textContent='';$('#rot').classList.remove('off');
+}
+function netFinish(final){
+  if(S.me&&Net.joined)Net.sendPos();
+  QZ=null;S.quizOpen=false;
+  view='result';renderResult(!!final||S.phase==='end');
+}
+
+function netTick(dt){
+  const m=Net.meta;if(!m||!m.state)return;
+  const now=Net.now();
+  if(Net.round!==m.round){Net.round=m.round;Net.hideRes=false;Net._ending=false;if(Net.role==='student'&&Net.joined&&view!=='wait'){goWait();}}
+  const ph=m.state==='end'?'end':(m.state==='race'&&m.startAt)?(now<m.startAt?'count':'race'):'lobby';
+  if(Net.role==='teacher'){
+    view='teacher';
+    S.phase=ph==='lobby'?'idle':ph;
+    if(ph==='count')S.cd=(m.startAt-now)/1000;
+    if(ph==='race')S.t=(now-m.startAt)/1000;
+    if(ph==='lobby')S.t=0;
+    return;
+  }
+  if(ph==='lobby'){if(view!=='wait')goWait();S.phase='idle';}
+  else if(ph==='count'){if(view==='wait')startNetRace(null);S.phase='count';S.cd=(m.startAt-now)/1000;}
+  else if(ph==='race'){
+    if(view==='wait'){startNetRace(Net.resume);Net.resume=null;}
+    if(S.phase!=='race'){S.phase='race';S.t=Math.max(0,(now-m.startAt)/1000);}
+  }else if(ph==='end'){
+    if(view==='game')netFinish(true);
+    S.phase='end';
+  }
+}
+
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+function teacherOverlay(){
+  const el=$('#tLobby');if(!el||Net.role!=='teacher')return;
+  const st=Net.meta.state,online=S.racers.filter(r=>r.on!==false);
+  if(st==='lobby'){
+    el.style.display='flex';
+    const url=(location.protocol==='file:'||location.origin==='null')?location.href.split('?')[0]:location.origin+location.pathname;
+    el.innerHTML=`<div class="lobbyCard"><div class="lc1">학생 입장 코드</div><div class="codeBig">${esc(Net.code)}</div>
+      <div class="lc2">학생 화면 → <b>수업 방 입장</b> → 코드와 이름 입력<br><small>${esc(url)}?room=${esc(Net.code)}</small></div>
+      <div class="lc3">✅ 입장 <b>${online.length}</b>명</div><div class="names"></div></div>`;
+    const box=el.querySelector('.names');
+    S.racers.forEach(r=>{const sp=document.createElement('span');sp.textContent=r.emoji+' '+r.name;if(r.on===false)sp.style.opacity='.4';box.appendChild(sp);});
+  }else if(st==='end'&&!Net.hideRes){
+    el.style.display='flex';
+    const ord=S.order.slice(0,12);
+    el.innerHTML=`<div class="lobbyCard"><div class="lc1">🏆 최종 결과</div><div class="rk"></div><button id="tResClose">닫기</button></div>`;
+    const box=el.querySelector('.rk');
+    ord.forEach((r,i)=>{const d=document.createElement('div');const a=document.createElement('span'),b=document.createElement('span');
+      a.textContent=`${['🥇','🥈','🥉'][i]||(i+1)+'.'} ${r.emoji} ${r.name}`;b.textContent=r.finishT!=null?`${fmt(r.finishT)} · 정답 ${r.correct}/${CFG.gates}`:`미완주 · 정답 ${r.correct}`;d.append(a,b);box.appendChild(d);});
+    el.querySelector('#tResClose').onclick=()=>{Net.hideRes=true;el.style.display='none';};
+  }else el.style.display='none';
+}
+
+function frame(now){
+  const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
+  if(Net.on){netTick(dt);netRemote(dt);}
+  if(view==='game'||view==='teacher'){
+    if(S.phase==='count'){
+      if(!Net.on)S.cd-=dt;
+      const n=Math.ceil(S.cd);
+      if(view==='game'){const el=$('#count');
+        if(S.cd>0){if(el.textContent!==String(n)){el.textContent=n;sfx('tick');}el.classList.add('on');}
+        else if(el.textContent!=='GO!'){el.textContent='GO!';sfx('go');setTimeout(()=>el.classList.remove('on'),500);}}
+      if(!Net.on&&S.cd<=0){S.phase='race';S.t=0;}
+    }else if(S.phase==='race'){
+      S.t+=dt;
+      for(const r of S.racers)if(!r.remote)stepRacer(r,dt);
+      rankAll();
+      if(Net.on){
+        if(Net.role==='student'){if(S.me&&S.me.finishT!=null&&view==='game')netFinish(false);}
+        else if(Net.role==='teacher'&&!Net._ending){
+          const act=S.racers.filter(r=>r.on!==false);
+          if(S.t>CFG.timeLimit||(S.racers.some(r=>r.finishT!=null)&&act.every(r=>r.finishT!=null))){Net._ending=true;Net.setEnd();}
+        }
+      }else{
+        if(S.t>CFG.timeLimit||S.racers.every(r=>r.finishT!=null))endRace();
+        else if(S.me&&S.me.finishT!=null)endRace();
+      }
+    }
+    S.shake=Math.max(0,S.shake-dt*1.5);
+    for(const p of S.parts){p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(p.g!==undefined?p.g:900)*dt;}
+    S.parts=S.parts.filter(p=>p.t<p.life);
+    for(const p of S.pops)p.t+=dt;S.pops=S.pops.filter(p=>p.t<1.4);
+    quizTick(dt);
+    if(view==='game'&&S.me){
+      drawGame();
+      $('#hGate').textContent=`🏁 ${Math.min(S.me.gate+1,CFG.gates)}/${CFG.gates}`;
+      $('#hRank').textContent=`${S.me.rank===1?'🥇':S.me.rank===2?'🥈':S.me.rank===3?'🥉':'🏃'} ${S.me.rank}위 / ${S.racers.length}`;
+      const hs=$('#hStreak');hs.style.display=S.me.streak>0?'':'none';hs.textContent='🔥 연속 '+S.me.streak;
+      const ib=$('#itemBtn');ib.classList.toggle('has',!!S.me.item);$('#itemIcon').textContent=S.me.item?ITEMS[S.me.item].icon:'·';
+    }
+    if(view==='teacher'){drawTeacher();if(now-lastSide>250){drawSide();lastSide=now;}}
+  }
+  if(Net.on){
+    if(Net.role==='student'&&Net.joined&&S.me&&(S.phase==='race'||S.phase==='end')&&now-Net.lastSend>400){Net.lastSend=now;Net.sendPos();}
+    if(view==='result'&&now-Net.lastRes>1000){Net.lastRes=now;renderResult(S.phase==='end');}
+    if(now-Net.lastUi>500){Net.lastUi=now;
+      if(Net.role==='teacher')teacherOverlay();
+      if(view==='wait'){$('#wCnt').textContent=S.racers.filter(r=>r.on!==false).length+(S.me?0:1);
+        const box=$('#wList');box.innerHTML='';[{emoji:S.profile.emoji,name:Net.pid+' (나)'}].concat(S.racers.filter(r=>r.on!==false)).forEach(r=>{const d=document.createElement('div');d.textContent=r.emoji+' '+r.name;box.appendChild(d);});}
+    }
+  }
+  if(!window.__manual)raf=requestAnimationFrame(frame);
+}
+
+/* ================== 흐름 ================== */
+function startSolo(){
+  Net.on=false;S.mode='solo';buildRace(true,27);
+  S.phase='count';S.cd=3.99;$('#quiz').classList.remove('on');S.quizOpen=false;QZ=null;
+  view='game';show('#s-game');$('#count').textContent='';$('#rot').classList.remove('off');
+}
+function endRace(){
+  if(S.phase==='end')return;
+  if(view==='game'){
+    S.phase='end';
+    let guard=0;
+    while(guard++<6000&&S.racers.some(r=>r.finishT==null)&&S.t<CFG.timeLimit*1.5){
+      S.t+=.1;
+      for(const r of S.racers){if(r.isBot)stepRacer(r,.1);}
+      rankAll();
+    }
+    rankAll();view='result';renderResult(true);
+  }else{S.phase='end';rankAll();drawSide();}
+}
+function renderResult(final){
+  const me=S.me;if(!me)return;
+  const ord=S.order,N=S.racers.length;
+  $('#quiz').classList.remove('on');
+  if(!$('#s-result').classList.contains('on'))show('#s-result');
+  const fin=me.finishT!=null;
+  $('#rTitle').textContent=!fin?'⏰ 시간 종료':me.rank===1?(final?'🏆 우승!!':'🏁 결승선 통과! (현재 1위)'):me.rank<=3?`🎉 ${me.rank}위${final?'!':' (잠정)'}`:`🏁 ${me.rank}위${final?'로 완주!':' (잠정)'}`;
+  $('#rSub').textContent=final?`${N}명 중 ${me.rank}위 · 기록 ${fin?fmt(me.finishT):'미완주'}`:`다른 친구들이 들어오는 중이에요... (지금 ${me.rank}위)`;
+  const medal=['🥇','🥈','🥉'],cls=['p1','p2','p3'];
+  const order3=[1,0,2].map(i=>ord[i]).filter(Boolean);
+  $('#podium').innerHTML=order3.map(r=>{const i=ord.indexOf(r);const d=document.createElement('div');d.className=cls[i];
+    const b=document.createElement('b');b.textContent=medal[i];const e=document.createElement('span');e.textContent=r.emoji;const n=document.createElement('span');n.style.fontSize='12px';n.textContent=r.name;d.append(b,e,n);return d.outerHTML;}).join('');
+  const placeBonus=Math.max(0,(N-me.rank+1)*10);
+  $('#mystat').innerHTML=`<div><b>${me.correct}/${CFG.gates}</b>정답</div><div><b>${me.best}</b>최고 연속</div><div><b>${me.score+(fin?placeBonus:0)}</b>점수${me.golden?' (골든 ✨)':''}</div>`;
+  const rl=$('#rankList');rl.innerHTML='';
+  const rowFor=(r,i,mine)=>{const d=document.createElement('div');if(mine)d.className='me';const a=document.createElement('span'),b=document.createElement('span');
+    a.textContent=`${i+1}. ${r.emoji} ${r.name}`;b.textContent=r.finishT!=null?fmt(r.finishT):'-';d.append(a,b);return d;};
+  ord.slice(0,10).forEach((r,i)=>rl.appendChild(rowFor(r,i,r===me)));
+  if(me.rank>10)rl.appendChild(rowFor(me,me.rank-1,true));
+  $('#again').style.display=Net.on?'none':'';
+  $('#toTitle').textContent=Net.on?'나가기':'처음 화면';
+}
+
+/* 교사 화면 (데모: 봇 28명) */
+function startTeacherDemo(){Net.on=false;buildRace(false,28);S.phase='idle';S.mode='teacher';view='teacher';$('#tLobby').style.display='none';show('#s-teacher');drawTeacher();drawSide();}
+$('#tStart').onclick=()=>{
+  if(Net.on&&Net.role==='teacher'){if(Net.meta.state==='lobby'&&S.racers.some(r=>r.on!==false)){sfx('tick');Net.startRace();}return;}
+  if(S.phase==='race'||S.phase==='count')return;
+  if(S.phase==='idle'||S.phase==='end'){buildRace(false,28);}
+  S.phase='count';S.cd=3.99;sfx('tick');
+};
+$('#tReset').onclick=()=>{
+  if(Net.on&&Net.role==='teacher'){Net.newRound();return;}
+  buildRace(false,28);S.phase='idle';drawTeacher();drawSide();
+};
+let delArmed=0;
+$('#tBack').onclick=async()=>{
+  if(Net.on&&Net.role==='teacher'){
+    if(!delArmed){delArmed=1;$('#tBack').textContent='⚠ 한 번 더: 방 삭제';setTimeout(()=>{delArmed=0;$('#tBack').textContent='← 나가기';},3000);return;}
+    delArmed=0;$('#tBack').textContent='← 나가기';$('#tLobby').style.display='none';await Net.leave(true);
+  }
+  view='none';show('#s-title');
+};
+
+/* ================== 버튼/초기화 ================== */
+const errText=e=>({noroom:'방을 찾을 수 없어요. 코드를 다시 확인해 주세요.',dup:'같은 이름이 이미 접속 중이에요. 이름을 바꿔 주세요.',started:'이미 시작된 방이에요. 선생님께 말씀드려 주세요.',
+  config:'Firebase 설정이 아직 안 되어 있어요. (firebase-config.js)',load:'Firebase를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.',code:'방 코드를 만들지 못했어요. 다시 시도해 주세요.'}[e&&e.message]||('접속 실패: '+(e&&e.message||e)));
+function saveLS(){try{localStorage.setItem('wtr',JSON.stringify({p:S.profile,c:$('#code').value}));}catch(e){}}
+function loadLS(){try{const o=JSON.parse(localStorage.getItem('wtr')||'null');if(o&&o.p){Object.assign(S.profile,o.p);$('#nick').value=S.profile.name||'';if(o.c)$('#code').value=o.c;}}catch(e){}
+  try{const q=new URLSearchParams(location.search).get('room');if(q&&/^\d{4}$/.test(q))$('#code').value=q;}catch(e){}}
+
+$('#goSolo').onclick=()=>{if(!S.profile.name)S.profile.name='나';startSolo();};
+$('#goTeacher').onclick=startTeacherDemo;
+$('#goJoin').onclick=async()=>{
+  const code=$('#code').value.trim(),name=(S.profile.name||'').trim(),msg=$('#joinMsg');
+  if(!/^\d{4}$/.test(code)){msg.textContent='방 코드 4자리를 입력해 주세요.';return;}
+  if(!name){msg.textContent='번호+이름을 입력해 주세요.';return;}
+  msg.textContent='접속 중...';$('#goJoin').disabled=true;
+  try{await Net.join(code,name,S.profile);S.mode='net-student';saveLS();msg.textContent='';goWait();}
+  catch(e){msg.textContent=errText(e);Net.on=false;Net.joined=false;}
+  $('#goJoin').disabled=false;
+};
+$('#goTeacherNet').onclick=async()=>{
+  const msg=$('#joinMsg');msg.textContent='방을 만드는 중...';
+  try{await Net.createRoom();S.mode='net-teacher';S.racers=[];S.me=null;S.phase='idle';S.feed=[];view='teacher';show('#s-teacher');msg.textContent='';Net.syncRemote();teacherOverlay();}
+  catch(e){msg.textContent=errText(e);Net.on=false;}
+};
+$('#wLeave').onclick=async()=>{await Net.leave();view='none';show('#s-title');};
+$('#again').onclick=startSolo;
+$('#toTitle').onclick=async()=>{if(Net.on)await Net.leave();view='none';show('#s-title');};
+$('#quit').onclick=async()=>{if(Net.on)await Net.leave();view='none';S.phase='idle';$('#quiz').classList.remove('on');QZ=null;S.quizOpen=false;show('#s-title');};
+$('#code').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);});
+
+buildPickers();loadLS();sync();
+window.addEventListener('beforeunload',()=>{try{if(Net.on&&Net.role==='student')Net.ref('players/'+Net.pid+'/on').set(false);}catch(e){}});
+requestAnimationFrame(frame);
+
+// 개발/테스트용 훅
+window.__game={S,CFG,Net,startSolo,answer:i=>answer(i),stepRacer,resolveQuiz,frame,getQZ:()=>QZ,
+  forceAnswer:ok=>{if(!QZ)return false;const r=QZ.r;QZ=null;$('#quiz').classList.remove('on');S.quizOpen=false;resolveQuiz(r,ok);return true;},view:()=>view};
+})();
+</script>
+</body>
+</html>
